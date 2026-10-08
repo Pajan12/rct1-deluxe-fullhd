@@ -14,6 +14,17 @@ It keeps the original RCT1 engine and adds:
 
 The game is **not** rendered at 1024×768 and stretched. The patched executable can create a larger game surface, so you actually see more of the park.
 
+## Screenshots
+
+**RCT1 Deluxe running at 1920×1080 on Windows 11**
+
+![RCT1 Deluxe Full HD gameplay](screenshots/RCT-fullhd2.jpg)
+
+Another Full HD view:
+
+![RCT1 Deluxe Full HD gameplay](screenshots/RCT-fullhd.jpg)
+
+
 ## Tested configuration
 
 - Windows 11
