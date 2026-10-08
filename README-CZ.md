@@ -34,28 +34,12 @@ Další ukázka ve Full HD:
 - herní monitor 1920×1080
 - dva monitory
 
-## Důležité: před rozbalením ZIP odblokuj
-
-Windows může staženému ZIPu přidat **Mark of the Web** a následně blokovat CMD/PowerShell skripty.
-
-Ještě před rozbalením:
-
-1. pravým tlačítkem na ZIP;
-2. **Vlastnosti**;
-3. zaškrtnout **Odblokovat**;
-4. **Použít / OK**;
-5. teprve potom rozbalit.
-
-Pokud už je ZIP rozbalený, spusť v jeho složce PowerShell a použij:
-
-```powershell
-Get-ChildItem -File | Unblock-File
-```
-
 ## Instalace
 
 1. Nainstaluj **RollerCoaster Tycoon Deluxe**.
-2. Z balíčku nakopíruj do hlavní složky hry pouze:
+2. **Ještě před rozbalením staženého ZIPu** na něj klikni pravým tlačítkem → **Vlastnosti** → zaškrtni **Odblokovat** → **Použít / OK**. Je to důležité, protože Windows jinak může blokovat CMD/PowerShell skripty.
+3. ZIP rozbal.
+4. Z balíčku nakopíruj do hlavní složky hry pouze:
 
    - `Install-RCT-FullHD.cmd`
    - `Start-RCT-FullHD.cmd`
@@ -70,16 +54,16 @@ Get-ChildItem -File | Unblock-File
    C:\Program Files (x86)\Steam\steamapps\common\RollerCoaster Tycoon Deluxe\
    ```
 
-3. Dvojklikem spusť:
+5. Dvojklikem spusť:
 
    ```text
    Install-RCT-FullHD.cmd
    ```
 
-4. Potvrď výzvu UAC systému Windows.
-5. Počkej na hlášku **Installation complete**.
-6. Instalátor zároveň vytvoří na ploše zástupce **RollerCoaster Tycoon FullHD** s původní herní ikonou.
-7. Hru potom spouštěj buď přes tohoto zástupce, nebo přes:
+6. Potvrď výzvu UAC systému Windows.
+7. Počkej na hlášku **Installation complete**.
+8. Instalátor zároveň vytvoří na ploše zástupce **RollerCoaster Tycoon FullHD** s původní herní ikonou.
+9. Hru potom spouštěj buď přes tohoto zástupce, nebo přes:
 
    ```text
    Start-RCT-FullHD.cmd
