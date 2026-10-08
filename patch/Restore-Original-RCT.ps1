@@ -1,6 +1,7 @@
 $ErrorActionPreference = "Stop"
 
-$root = Split-Path -Parent $MyInvocation.MyCommand.Path
+$patchDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$root = Split-Path -Parent $patchDir
 $rct = Join-Path $root "RCT.EXE"
 $backup = Join-Path $root "RCT.original.exe"
 
