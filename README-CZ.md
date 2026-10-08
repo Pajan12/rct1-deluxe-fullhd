@@ -11,6 +11,7 @@ Zachovává původní RCT1 engine a přidává:
 - podporu více monitorů
 - automatické uvolnění kurzoru při Alt+Tab
 - automatickou zálohu původního EXE
+- **automatické rozbalení běžné NeoLite Steam/GOG verze EXE**
 
 Nejde o roztažený obraz 1024×768. Upravené EXE skutečně dovolí hře vykreslit větší plochu, takže je z parku vidět více.
 
@@ -60,17 +61,21 @@ Get-ChildItem -File | Unblock-File
    C:\Program Files (x86)\Steam\steamapps\common\RollerCoaster Tycoon Deluxe\
    ```
 
-3. Spusť:
+3. Dvojklikem spusť:
 
    ```text
    Install-RCT-FullHD.cmd
    ```
 
-4. Hru potom spouštěj přes:
+4. Potvrď výzvu UAC systému Windows.
+5. Počkej na hlášku **Installation complete**.
+6. Hru potom spouštěj přes:
 
    ```text
    Start-RCT-FullHD.cmd
    ```
+
+A to je vše. **Není potřeba instalovat Python ani zadávat jakékoli příkazy.**
 
 Instalátor automaticky vytvoří zálohu původního EXE jako:
 
@@ -80,19 +85,19 @@ RCT.original.exe
 
 ### Anglický Steam/GOG Deluxe 1.20.015
 
-Anglické `RCT.EXE` bývá zabalené kompresorem **NeoLite**, takže se v něm potřebné hex hodnoty nedají upravit přímo.
+Běžné anglické `RCT.EXE` je zabalené kompresorem **NeoLite**. Instalátor to teď řeší automaticky.
 
-Tento projekt záměrně **neobsahuje a nešíří žádné RCT.EXE**.
+V případě potřeby si dočasně stáhne:
 
-Pokud instalátor oznámí zabalené EXE, vytvoř ze své legálně nainstalované hry rozbalenou kopii, pojmenuj ji:
+- oficiální **Python 3.12.7 embeddable runtime** z python.org
+- **Neo-Executable-Decompressor** od Russa Dilla, připnutý na commit `b88c93369e7faf4c087e3973e1028038ed510526`
+- **pefile**, připnutý na commit `cc9f5501ba93938e505858eaa3230608b6fbc34f`
 
-```text
-RCT-unpacked.exe
-```
+Rozbalí tvoje vlastní `RCT.EXE`, výsledek ověří, provede Full HD patch a dočasné nástroje zase smaže. Python se do Windows **neinstaluje**.
 
-dej ji vedle `RCT.EXE` a spusť instalátor znovu.
+Při první instalaci je pro automatické rozbalení potřeba připojení k Internetu.
 
-Podrobnosti jsou v [UNPACKING.md](UNPACKING.md).
+Technické podrobnosti jsou v [UNPACKING.md](UNPACKING.md).
 
 ## Co patch mění
 
