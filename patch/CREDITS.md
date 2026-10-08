@@ -14,13 +14,26 @@ Long-running discussion of RCT1 fullscreen/windowed hacks, unpacked executables 
 
 https://www.gog.com/forum/rollercoaster_tycoon_series/hack_run_rct_full_screen_at_any_resolution_up_to_1280x1024/page4
 
-## Neo-Executable-Decompressor
+## NeoLite / ExeLock unpacking
 
-Russ Dill's NeoLite unpacker is useful for owners of the English Deluxe 1.20.015 executable, which is commonly NeoLite-packed.
+Russ Dill's Neo-Executable-Decompressor is the base unpacker:
 
 https://github.com/russdill/Neo-Executable-Decompressor
 
-This repository does not bundle that project or any RollerCoaster Tycoon executable.
+The Steam/GOG RCT1 executable tested for this project uses the ExeLock variant. ExeLock support is provided by ZenoArrows' contribution:
+
+https://github.com/russdill/Neo-Executable-Decompressor/pull/1
+
+The installer pins the corresponding fork commit:
+
+https://github.com/ZenoArrows/Neo-Executable-Decompressor/commit/4c8e0166af65f4a5410cd6a011489e04ffee1bbd
+
+The unpacker also uses:
+
+- pefile 2023.2.7: https://github.com/erocarrera/pefile/releases/tag/v2023.2.7
+- zipfile-deflate64 0.2.0: https://pypi.org/project/zipfile-deflate64/0.2.0/
+
+This repository does not bundle any RollerCoaster Tycoon executable.
 
 ## This project's additions
 
