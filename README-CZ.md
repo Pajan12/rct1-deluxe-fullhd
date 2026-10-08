@@ -78,7 +78,8 @@ Get-ChildItem -File | Unblock-File
 
 4. Potvrď výzvu UAC systému Windows.
 5. Počkej na hlášku **Installation complete**.
-6. Hru potom spouštěj přes:
+6. Instalátor zároveň vytvoří na ploše zástupce **RollerCoaster Tycoon FullHD** s původní herní ikonou.
+7. Hru potom spouštěj buď přes tohoto zástupce, nebo přes:
 
    ```text
    Start-RCT-FullHD.cmd
