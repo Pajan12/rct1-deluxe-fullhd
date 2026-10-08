@@ -14,6 +14,17 @@ Zachovává původní RCT1 engine a přidává:
 
 Nejde o roztažený obraz 1024×768. Upravené EXE skutečně dovolí hře vykreslit větší plochu, takže je z parku vidět více.
 
+## Screenshoty
+
+**RCT1 Deluxe běžící v rozlišení 1920×1080 na Windows 11**
+
+![RCT1 Deluxe Full HD gameplay](screenshots/RCT-fullhd2.jpg)
+
+Další ukázka ve Full HD:
+
+![RCT1 Deluxe Full HD gameplay](screenshots/RCT-fullhd.jpg)
+
+
 ## Otestovaná konfigurace
 
 - Windows 11
