@@ -19,11 +19,11 @@ The game is **not** rendered at 1024×768 and stretched. The patched executable 
 
 **RCT1 Deluxe running at 1920×1080 on Windows 11**
 
-![RCT1 Deluxe Full HD gameplay](screenshots/RCT-fullhd2.jpg)
+![RCT1 Deluxe Full HD gameplay](patch/screenshots/RCT-fullhd2.jpg)
 
 Another Full HD view:
 
-![RCT1 Deluxe Full HD gameplay](screenshots/RCT-fullhd.jpg)
+![RCT1 Deluxe Full HD gameplay](patch/screenshots/RCT-fullhd.jpg)
 
 
 ## Tested configuration
@@ -57,7 +57,16 @@ Get-ChildItem -File | Unblock-File
 ## Installation
 
 1. Install **RollerCoaster Tycoon Deluxe** normally.
-2. Copy/extract this release into the game folder, typically:
+2. From the downloaded package, copy these items into the game folder:
+
+   - `Install-RCT-FullHD.cmd`
+   - `Start-RCT-FullHD.cmd`
+   - `Restore-Original-RCT.cmd`
+   - the entire `patch` folder
+
+   The README files can stay outside the game folder. This keeps the RCT directory tidy: only three small entry-point files and one `patch` folder are added.
+
+   Typical Steam folder:
 
    ```text
    C:\Program Files (x86)\Steam\steamapps\common\RollerCoaster Tycoon Deluxe\
@@ -89,17 +98,18 @@ RCT.original.exe
 
 The common English Deluxe executable is compressed with **NeoLite**. The installer now handles this automatically.
 
-If required, it temporarily downloads:
+If the Steam/GOG executable needs unpacking, the installer may temporarily download these **helper packages**:
 
-- the official **Python 3.12.7 embeddable runtime** from python.org
-- Russ Dill's **Neo-Executable-Decompressor**, pinned to commit `b88c93369e7faf4c087e3973e1028038ed510526`
-- **pefile**, pinned to commit `cc9f5501ba93938e505858eaa3230608b6fbc34f`
+- **Python 3.10.11 embeddable runtime** from python.org — portable Python used only to run the unpacker
+- **Neo-Executable-Decompressor with ExeLock support**, pinned to commit `4c8e0166af65f4a5410cd6a011489e04ffee1bbd` — unpacks the RCT-specific ExeLock/NeoLite variant
+- **pefile 2023.2.7** from GitHub — Portable Executable parsing used by the unpacker
+- **zipfile-deflate64 0.2.0** from PyPI — Deflate64 decompression required by the ExeLock-packed RCT executable
 
-It unpacks your own `RCT.EXE`, validates the result, applies the Full HD patch, and removes the temporary tools afterwards. Python is **not installed** into Windows.
+These are downloaded only into the Windows temporary directory. The installer verifies the Deflate64 wheel against the SHA-256 published by PyPI, unpacks your own `RCT.EXE`, applies the Full HD patch, and then deletes the temporary helper files. Python is **not installed** into Windows.
 
 An Internet connection is required during the first installation when automatic unpacking is needed.
 
-See [UNPACKING.md](UNPACKING.md) for technical details.
+See [UNPACKING.md](patch/UNPACKING.md) for technical details.
 
 ## What the installer changes
 
@@ -168,7 +178,7 @@ This project builds on long-running community research into RCT1 widescreen/wind
 - GOG community discussions around unpacked Deluxe executables and widescreen modes
 - Russ Dill's open-source **Neo-Executable-Decompressor** project for NeoLite-packed executables
 
-See [CREDITS.md](CREDITS.md).
+See [CREDITS.md](patch/CREDITS.md).
 
 ## License
 
