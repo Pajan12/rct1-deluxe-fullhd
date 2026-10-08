@@ -11,6 +11,7 @@ It keeps the original RCT1 engine and adds:
 - multi-monitor support
 - automatic cursor release on Alt+Tab
 - automatic backup of the original executable
+- **automatic unpacking of the common NeoLite-packed Steam/GOG executable**
 
 The game is **not** rendered at 1024×768 and stretched. The patched executable can create a larger game surface, so you actually see more of the park.
 
@@ -62,17 +63,21 @@ Get-ChildItem -File | Unblock-File
    C:\Program Files (x86)\Steam\steamapps\common\RollerCoaster Tycoon Deluxe\
    ```
 
-3. Run:
+3. Double-click:
 
    ```text
    Install-RCT-FullHD.cmd
    ```
 
-4. Start the game with:
+4. Approve the Windows UAC prompt.
+5. Wait for the **Installation complete** message.
+6. Start the game with:
 
    ```text
    Start-RCT-FullHD.cmd
    ```
+
+That is all. **No Python installation and no command-line work is required.**
 
 The installer automatically backs up the original executable as:
 
@@ -82,19 +87,19 @@ RCT.original.exe
 
 ### English Steam/GOG 1.20.015 users
 
-The English Deluxe executable is commonly compressed with **NeoLite**, so the byte pattern needed for the 1080p patch is not directly present in the installed `RCT.EXE`.
+The common English Deluxe executable is compressed with **NeoLite**. The installer now handles this automatically.
 
-This repository intentionally does **not** include or redistribute any RollerCoaster Tycoon executable.
+If required, it temporarily downloads:
 
-If the installer reports a packed executable, create an unpacked copy from your own legally installed game, name it:
+- the official **Python 3.12.7 embeddable runtime** from python.org
+- Russ Dill's **Neo-Executable-Decompressor**, pinned to commit `b88c93369e7faf4c087e3973e1028038ed510526`
+- **pefile**, pinned to commit `cc9f5501ba93938e505858eaa3230608b6fbc34f`
 
-```text
-RCT-unpacked.exe
-```
+It unpacks your own `RCT.EXE`, validates the result, applies the Full HD patch, and removes the temporary tools afterwards. Python is **not installed** into Windows.
 
-put it next to `RCT.EXE`, then run `Install-RCT-FullHD.cmd` again.
+An Internet connection is required during the first installation when automatic unpacking is needed.
 
-See [UNPACKING.md](UNPACKING.md).
+See [UNPACKING.md](UNPACKING.md) for technical details.
 
 ## What the installer changes
 
