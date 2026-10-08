@@ -1,13 +1,24 @@
 $ErrorActionPreference = "Stop"
 
-$root = Split-Path -Parent $MyInvocation.MyCommand.Path
-$rct = Join-Path $root "RCT.EXE"
-$unpacked = Join-Path $root "RCT-unpacked.exe"
-$backup = Join-Path $root "RCT.original.exe"
+# RCT1 Deluxe Full HD installer
+# The common English Steam/GOG Deluxe 1.20.015 executable is NeoLite-packed.
+# This installer unpacks it automatically using temporary open-source tools.
 
 function Show-Info([string]$text) {
     Add-Type -AssemblyName PresentationFramework -ErrorAction SilentlyContinue
     [System.Windows.MessageBox]::Show($text, "RCT1 Deluxe Full HD") | Out-Null
+}
+
+function Ensure-Administrator {
+    $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+    $principal = New-Object Security.Principal.WindowsPrincipal($identity)
+    $isAdmin = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
+    if (-not $isAdmin) {
+        $args = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
+        Start-Process powershell.exe -Verb RunAs -ArgumentList $args
+        exit
+    }
 }
 
 function Find-Pattern([byte[]]$data, [byte[]]$pattern) {
@@ -31,89 +42,223 @@ function Hex([string]$s) {
     return [byte[]]($s -split ' ' | ForEach-Object { [Convert]::ToByte($_, 16) })
 }
 
+function Download-File([string]$url, [string]$destination, [string]$label) {
+    Write-Host "Downloading $label..."
+    Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $destination
+    if (-not (Test-Path $destination)) {
+        throw "Download failed: $label"
+    }
+}
+
+function Get-PatternState([byte[]]$data, [byte[]]$oldW, [byte[]]$oldH, [byte[]]$newW, [byte[]]$newH) {
+    $oldWHits = Find-Pattern $data $oldW
+    $oldHHits = Find-Pattern $data $oldH
+    $newWHits = Find-Pattern $data $newW
+    $newHHits = Find-Pattern $data $newH
+
+    if ($newWHits.Count -eq 1 -and $newHHits.Count -eq 1) {
+        return @{
+            State = "patched"
+            WidthOffset = $newWHits[0]
+            HeightOffset = $newHHits[0]
+        }
+    }
+
+    if ($oldWHits.Count -eq 1 -and $oldHHits.Count -eq 1) {
+        return @{
+            State = "patchable"
+            WidthOffset = $oldWHits[0]
+            HeightOffset = $oldHHits[0]
+        }
+    }
+
+    return @{
+        State = "unsupported"
+        WidthOffset = -1
+        HeightOffset = -1
+    }
+}
+
+function Patch-Bytes(
+    [byte[]]$data,
+    [byte[]]$newW,
+    [byte[]]$newH,
+    [int]$widthOffset,
+    [int]$heightOffset
+) {
+    [Array]::Copy($newW, 0, $data, $widthOffset, $newW.Length)
+    [Array]::Copy($newH, 0, $data, $heightOffset, $newH.Length)
+    return $data
+}
+
+function Auto-Unpack-NeoLite([string]$inputExe, [string]$outputExe) {
+    $tempRoot = Join-Path ([IO.Path]::GetTempPath()) ("RCT1-FullHD-" + [guid]::NewGuid().ToString("N"))
+    $pythonDir = Join-Path $tempRoot "python"
+    $peSrcDir = Join-Path $tempRoot "pefile-src"
+
+    New-Item -ItemType Directory -Path $tempRoot -Force | Out-Null
+    New-Item -ItemType Directory -Path $pythonDir -Force | Out-Null
+    New-Item -ItemType Directory -Path $peSrcDir -Force | Out-Null
+
+    try {
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+        # Pinned upstream versions.
+        $pythonVersion = "3.12.7"
+        $pythonZipUrl = "https://www.python.org/ftp/python/$pythonVersion/python-$pythonVersion-embed-amd64.zip"
+
+        $neoliteCommit = "b88c93369e7faf4c087e3973e1028038ed510526"
+        $neoliteUrl = "https://raw.githubusercontent.com/russdill/Neo-Executable-Decompressor/$neoliteCommit/neolite_unpack.py"
+
+        $pefileCommit = "cc9f5501ba93938e505858eaa3230608b6fbc34f"
+        $pefileZipUrl = "https://github.com/erocarrera/pefile/archive/$pefileCommit.zip"
+
+        $pythonZip = Join-Path $tempRoot "python.zip"
+        $pefileZip = Join-Path $tempRoot "pefile.zip"
+        $neoliteScript = Join-Path $pythonDir "neolite_unpack.py"
+
+        Download-File $pythonZipUrl $pythonZip "temporary Python runtime from python.org"
+        Expand-Archive -Path $pythonZip -DestinationPath $pythonDir -Force
+
+        Download-File $pefileZipUrl $pefileZip "pefile dependency from GitHub"
+        Expand-Archive -Path $pefileZip -DestinationPath $peSrcDir -Force
+
+        $peRoot = Get-ChildItem -Path $peSrcDir -Directory | Select-Object -First 1
+        if ($null -eq $peRoot) {
+            throw "Could not locate the extracted pefile source."
+        }
+
+        Copy-Item (Join-Path $peRoot.FullName "pefile.py") (Join-Path $pythonDir "pefile.py") -Force
+        Copy-Item (Join-Path $peRoot.FullName "ordlookup") (Join-Path $pythonDir "ordlookup") -Recurse -Force
+
+        Download-File $neoliteUrl $neoliteScript "NeoLite unpacker from GitHub"
+
+        $pythonExe = Join-Path $pythonDir "python.exe"
+        if (-not (Test-Path $pythonExe)) {
+            throw "Temporary Python runtime was not extracted correctly."
+        }
+
+        Write-Host "Unpacking the original RCT.EXE..."
+        & $pythonExe $neoliteScript $inputExe $outputExe
+        if ($LASTEXITCODE -ne 0) {
+            throw "NeoLite unpacker returned exit code $LASTEXITCODE."
+        }
+
+        if (-not (Test-Path $outputExe)) {
+            throw "NeoLite unpacker did not create an output file."
+        }
+
+        if ((Get-Item $outputExe).Length -lt 2000000) {
+            throw "The unpacked executable is unexpectedly small."
+        }
+    }
+    finally {
+        Remove-Item $tempRoot -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
+Ensure-Administrator
+
+$root = Split-Path -Parent $MyInvocation.MyCommand.Path
+$rct = Join-Path $root "RCT.EXE"
+$backup = Join-Path $root "RCT.original.exe"
+
+# Known English Deluxe 1.20.015 unpacked window-size checks.
 $oldW = Hex "81 7D FC 00 05 00 00 7E 07 C7 45 FC 00 05 00 00"
 $newW = Hex "81 7D FC 80 07 00 00 7E 07 C7 45 FC 80 07 00 00"
 $oldH = Hex "81 7D F4 00 04 00 00 7E 07 C7 45 F4 00 04 00 00"
 $newH = Hex "81 7D F4 38 04 00 00 7E 07 C7 45 F4 38 04 00 00"
 
-if (-not (Test-Path $rct)) {
-    Show-Info "RCT.EXE was not found.`n`nExtract/copy this release into the RollerCoaster Tycoon Deluxe installation folder, next to RCT.EXE."
-    exit 1
-}
-
-$current = [System.IO.File]::ReadAllBytes($rct)
-$oldWHits = Find-Pattern $current $oldW
-$oldHHits = Find-Pattern $current $oldH
-$newWHits = Find-Pattern $current $newW
-$newHHits = Find-Pattern $current $newH
-
-if ($newWHits.Count -eq 1 -and $newHHits.Count -eq 1) {
-    Write-Host "RCT.EXE is already patched for 1920x1080."
-}
-elseif ($oldWHits.Count -eq 1 -and $oldHHits.Count -eq 1) {
-    if (-not (Test-Path $backup)) {
-        Copy-Item $rct $backup
-        Write-Host "Backup created: RCT.original.exe"
+try {
+    if (-not (Test-Path $rct)) {
+        throw "RCT.EXE was not found. Extract/copy this release into the RollerCoaster Tycoon Deluxe installation folder, next to RCT.EXE."
     }
 
-    $data = [System.IO.File]::ReadAllBytes($rct)
-    [Array]::Copy($newW, 0, $data, $oldWHits[0], $newW.Length)
-    [Array]::Copy($newH, 0, $data, $oldHHits[0], $newH.Length)
-    [System.IO.File]::WriteAllBytes($rct, $data)
-    Write-Host "RCT.EXE patched to allow a 1920x1080 window."
-}
-elseif (Test-Path $unpacked) {
-    $u = [System.IO.File]::ReadAllBytes($unpacked)
-    $uOldW = Find-Pattern $u $oldW
-    $uOldH = Find-Pattern $u $oldH
-    $uNewW = Find-Pattern $u $newW
-    $uNewH = Find-Pattern $u $newH
+    Write-Host "Checking RCT.EXE..."
+    $current = [System.IO.File]::ReadAllBytes($rct)
+    $state = Get-PatternState $current $oldW $oldH $newW $newH
 
-    if ($uNewW.Count -eq 1 -and $uNewH.Count -eq 1) {
+    if ($state.State -eq "patched") {
+        Write-Host "RCT.EXE is already patched for 1920x1080."
+    }
+    elseif ($state.State -eq "patchable") {
         if (-not (Test-Path $backup)) {
             Copy-Item $rct $backup
             Write-Host "Backup created: RCT.original.exe"
         }
-        Copy-Item $unpacked $rct -Force
-        Write-Host "Installed already-patched RCT-unpacked.exe as RCT.EXE."
-    }
-    elseif ($uOldW.Count -eq 1 -and $uOldH.Count -eq 1) {
-        if (-not (Test-Path $backup)) {
-            Copy-Item $rct $backup
-            Write-Host "Backup created: RCT.original.exe"
-        }
-        [Array]::Copy($newW, 0, $u, $uOldW[0], $newW.Length)
-        [Array]::Copy($newH, 0, $u, $uOldH[0], $newH.Length)
-        [System.IO.File]::WriteAllBytes($rct, $u)
-        Write-Host "RCT-unpacked.exe patched and installed as RCT.EXE."
+
+        $patched = Patch-Bytes $current $newW $newH $state.WidthOffset $state.HeightOffset
+        [System.IO.File]::WriteAllBytes($rct, $patched)
+        Write-Host "RCT.EXE patched to allow a 1920x1080 window."
     }
     else {
-        Show-Info "RCT-unpacked.exe was found, but it does not match the supported English Deluxe 1.20.015 layout.`n`nNo game file was modified."
-        exit 2
+        # The common English Steam/GOG build is NeoLite-packed.
+        # Generate the unpacked copy automatically; the user does not need to
+        # rename files or run any command manually.
+        $generated = Join-Path ([IO.Path]::GetTempPath()) ("RCT-unpacked-" + [guid]::NewGuid().ToString("N") + ".exe")
+
+        try {
+            Write-Host "Packed RCT.EXE detected."
+            Write-Host "Preparing automatic unpacking (Internet connection required)..."
+            Auto-Unpack-NeoLite $rct $generated
+
+            Write-Host "Validating unpacked executable..."
+            $unpacked = [System.IO.File]::ReadAllBytes($generated)
+            $unpackedState = Get-PatternState $unpacked $oldW $oldH $newW $newH
+
+            if ($unpackedState.State -eq "unsupported") {
+                throw "The unpacked executable does not match the supported English RollerCoaster Tycoon Deluxe 1.20.015 layout. No game file was modified."
+            }
+
+            if (-not (Test-Path $backup)) {
+                Copy-Item $rct $backup
+                Write-Host "Backup created: RCT.original.exe"
+            }
+
+            if ($unpackedState.State -eq "patchable") {
+                $unpacked = Patch-Bytes $unpacked $newW $newH $unpackedState.WidthOffset $unpackedState.HeightOffset
+            }
+
+            [System.IO.File]::WriteAllBytes($rct, $unpacked)
+            Write-Host "Unpacked and patched RCT.EXE installed."
+        }
+        finally {
+            Remove-Item $generated -Force -ErrorAction SilentlyContinue
+        }
     }
-}
-else {
+
+    # Compatibility combination verified on Windows 11:
+    # XP SP3 + 16-bit colour + application DPI + elevated game process.
+    $layers = "HKCU:\Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers"
+    if (-not (Test-Path $layers)) {
+        New-Item -Path $layers -Force | Out-Null
+    }
+
+    New-ItemProperty `
+        -Path $layers `
+        -Name $rct `
+        -Value "~ RUNASADMIN 16BITCOLOR HIGHDPIAWARE WINXPSP3" `
+        -PropertyType String `
+        -Force | Out-Null
+
+    Write-Host ""
+    Write-Host "Installation complete."
+    Write-Host "Start the game with Start-RCT-FullHD.cmd"
+
     Show-Info @"
-This RCT.EXE appears to be packed (the English Steam/GOG Deluxe 1.20.015 executable is typically NeoLite-packed).
+Installation complete.
 
-This project intentionally does NOT redistribute RCT.EXE.
+The installer created/kept a backup of the original game executable as:
+RCT.original.exe
 
-Create an unpacked copy from your own legally installed RCT.EXE, name it:
-
-RCT-unpacked.exe
-
-place it in this game folder, and run Install-RCT-FullHD.cmd again.
-
-See UNPACKING.md for details.
+Start RollerCoaster Tycoon with:
+Start-RCT-FullHD.cmd
 "@
-    exit 3
 }
-
-$layers = "HKCU:\Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers"
-if (-not (Test-Path $layers)) { New-Item -Path $layers -Force | Out-Null }
-New-ItemProperty -Path $layers -Name $rct -Value "~ RUNASADMIN 16BITCOLOR HIGHDPIAWARE WINXPSP3" -PropertyType String -Force | Out-Null
-
-Write-Host ""
-Write-Host "Installation complete."
-Write-Host "Start the game with Start-RCT-FullHD.cmd"
-Show-Info "Installation complete.`n`nStart RollerCoaster Tycoon with:`nStart-RCT-FullHD.cmd"
+catch {
+    $message = $_.Exception.Message
+    Write-Host ""
+    Write-Host "Installation failed: $message" -ForegroundColor Red
+    Show-Info "Installation failed:`n`n$message"
+    exit 1
+}
