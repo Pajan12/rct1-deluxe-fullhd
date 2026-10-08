@@ -104,17 +104,24 @@ function Auto-Unpack-NeoLite([string]$inputExe, [string]$outputExe) {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
         # Pinned upstream versions.
-        $pythonVersion = "3.12.7"
+        $pythonVersion = "3.10.11"
         $pythonZipUrl = "https://www.python.org/ftp/python/$pythonVersion/python-$pythonVersion-embed-amd64.zip"
 
-        $neoliteCommit = "b88c93369e7faf4c087e3973e1028038ed510526"
-        $neoliteUrl = "https://raw.githubusercontent.com/russdill/Neo-Executable-Decompressor/$neoliteCommit/neolite_unpack.py"
+        # RCT1's Steam/GOG executable uses the ExeLock variant of NeoLite.
+        # This pinned fork commit adds the required Deflate64/ExeLock support.
+        $neoliteCommit = "4c8e0166af65f4a5410cd6a011489e04ffee1bbd"
+        $neoliteUrl = "https://raw.githubusercontent.com/ZenoArrows/Neo-Executable-Decompressor/$neoliteCommit/neolite_unpack.py"
 
-        $pefileCommit = "cc9f5501ba93938e505858eaa3230608b6fbc34f"
-        $pefileZipUrl = "https://github.com/erocarrera/pefile/archive/$pefileCommit.zip"
+        $pefileVersion = "v2023.2.7"
+        $pefileZipUrl = "https://github.com/erocarrera/pefile/archive/refs/tags/$pefileVersion.zip"
+
+        $deflateVersion = "0.2.0"
+        $deflateMetadataUrl = "https://pypi.org/pypi/zipfile-deflate64/$deflateVersion/json"
+        $deflateWheelName = "zipfile_deflate64-0.2.0-cp310-cp310-win_amd64.whl"
 
         $pythonZip = Join-Path $tempRoot "python.zip"
         $pefileZip = Join-Path $tempRoot "pefile.zip"
+        $deflateZip = Join-Path $tempRoot "deflate64.zip"
         $neoliteScript = Join-Path $pythonDir "neolite_unpack.py"
 
         Download-File $pythonZipUrl $pythonZip "temporary Python runtime from python.org"
@@ -131,7 +138,22 @@ function Auto-Unpack-NeoLite([string]$inputExe, [string]$outputExe) {
         Copy-Item (Join-Path $peRoot.FullName "pefile.py") (Join-Path $pythonDir "pefile.py") -Force
         Copy-Item (Join-Path $peRoot.FullName "ordlookup") (Join-Path $pythonDir "ordlookup") -Recurse -Force
 
-        Download-File $neoliteUrl $neoliteScript "NeoLite unpacker from GitHub"
+        Write-Host "Resolving zipfile-deflate64 $deflateVersion from PyPI..."
+        $deflateMeta = Invoke-RestMethod -UseBasicParsing -Uri $deflateMetadataUrl
+        $deflateWheel = $deflateMeta.urls | Where-Object { $_.filename -eq $deflateWheelName } | Select-Object -First 1
+        if ($null -eq $deflateWheel) {
+            throw "Could not locate the required Windows CPython 3.10 zipfile-deflate64 wheel on PyPI."
+        }
+
+        Download-File $deflateWheel.url $deflateZip "zipfile-deflate64 $deflateVersion from PyPI"
+        $actualDeflateHash = (Get-FileHash -Algorithm SHA256 -Path $deflateZip).Hash.ToLowerInvariant()
+        $expectedDeflateHash = $deflateWheel.digests.sha256.ToLowerInvariant()
+        if ($actualDeflateHash -ne $expectedDeflateHash) {
+            throw "SHA-256 verification failed for zipfile-deflate64."
+        }
+        Expand-Archive -Path $deflateZip -DestinationPath $pythonDir -Force
+
+        Download-File $neoliteUrl $neoliteScript "ExeLock-compatible NeoLite unpacker from GitHub"
 
         $pythonExe = Join-Path $pythonDir "python.exe"
         if (-not (Test-Path $pythonExe)) {
@@ -159,7 +181,8 @@ function Auto-Unpack-NeoLite([string]$inputExe, [string]$outputExe) {
 
 Ensure-Administrator
 
-$root = Split-Path -Parent $MyInvocation.MyCommand.Path
+$patchDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$root = Split-Path -Parent $patchDir
 $rct = Join-Path $root "RCT.EXE"
 $backup = Join-Path $root "RCT.original.exe"
 
