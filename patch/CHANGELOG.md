@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.3
+
+Convenience improvement.
+
+- Installer creates a Desktop shortcut named `RollerCoaster Tycoon FullHD`
+- Shortcut launches the tested Full HD wrapper
+- Shortcut uses the original RCT game icon from `RCT.EXE`
+- Restore script removes the shortcut automatically
+
+
 ## 1.0.2
 
 Clean-install test fixes.
