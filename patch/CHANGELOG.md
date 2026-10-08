@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.0.2
+
+Clean-install test fixes.
+
+- Added ExeLock/Deflate64 support for the Steam/GOG RCT1 executable
+- Switched the temporary runtime to Python 3.10.11 for zipfile-deflate64 compatibility
+- Added zipfile-deflate64 0.2.0 with SHA-256 verification from PyPI metadata
+- Pinned pefile to 2023.2.7, matching the ExeLock unpacker requirements
+- Documented all helper packages downloaded by the installer
+- Moved internal PowerShell scripts and technical files into the `patch` folder
+- Kept only the three CMD entry points and README files at the package root
+
 ## 1.0.1
 
 Installer usability fix discovered during clean-install testing.
