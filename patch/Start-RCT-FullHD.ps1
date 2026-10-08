@@ -13,7 +13,8 @@ if (-not $isAdmin) {
     exit
 }
 
-$root = Split-Path -Parent $MyInvocation.MyCommand.Path
+$patchDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$root = Split-Path -Parent $patchDir
 $exe  = Join-Path $root "RCT.EXE"
 $cfg  = Join-Path $root "Data\Game.cfg"
 
