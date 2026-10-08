@@ -264,6 +264,27 @@ try {
         -PropertyType String `
         -Force | Out-Null
 
+    # Create a convenient Desktop shortcut that still launches the tested
+    # Full HD wrapper, but uses the RollerCoaster Tycoon game icon.
+    $launcher = Join-Path $root "Start-RCT-FullHD.cmd"
+    if (Test-Path $launcher) {
+        try {
+            $shell = New-Object -ComObject WScript.Shell
+            $desktop = $shell.SpecialFolders.Item("Desktop")
+            $shortcutPath = Join-Path $desktop "RollerCoaster Tycoon FullHD.lnk"
+            $shortcut = $shell.CreateShortcut($shortcutPath)
+            $shortcut.TargetPath = $launcher
+            $shortcut.WorkingDirectory = $root
+            $shortcut.IconLocation = "$rct,0"
+            $shortcut.Description = "RollerCoaster Tycoon FullHD"
+            $shortcut.Save()
+            Write-Host "Desktop shortcut created: RollerCoaster Tycoon FullHD"
+        }
+        catch {
+            Write-Host "Warning: desktop shortcut could not be created: $($_.Exception.Message)" -ForegroundColor Yellow
+        }
+    }
+
     Write-Host ""
     Write-Host "Installation complete."
     Write-Host "Start the game with Start-RCT-FullHD.cmd"
