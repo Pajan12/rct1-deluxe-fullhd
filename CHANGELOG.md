@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.0.1
+
+Installer usability fix discovered during clean-install testing.
+
+- NeoLite unpacking is now fully automatic
+- No Python installation or command-line steps required
+- Installer self-elevates through UAC
+- Uses a temporary official Python embeddable runtime
+- Pins Neo-Executable-Decompressor and pefile to specific commits
+- Validates the unpacked EXE before overwriting the game executable
+- Temporary unpacking tools are removed afterwards
+- Simplified EN/CZ installation instructions
+
 ## 1.0.0
 
 Initial public release.
