@@ -139,7 +139,7 @@ function Auto-Unpack-NeoLite([string]$inputExe, [string]$outputExe) {
         Copy-Item (Join-Path $peRoot.FullName "ordlookup") (Join-Path $pythonDir "ordlookup") -Recurse -Force
 
         Write-Host "Resolving zipfile-deflate64 $deflateVersion from PyPI..."
-        $deflateMeta = Invoke-RestMethod -UseBasicParsing -Uri $deflateMetadataUrl
+        $deflateMeta = Invoke-RestMethod -Uri $deflateMetadataUrl
         $deflateWheel = $deflateMeta.urls | Where-Object { $_.filename -eq $deflateWheelName } | Select-Object -First 1
         if ($null -eq $deflateWheel) {
             throw "Could not locate the required Windows CPython 3.10 zipfile-deflate64 wheel on PyPI."
