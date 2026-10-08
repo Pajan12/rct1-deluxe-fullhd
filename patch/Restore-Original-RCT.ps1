@@ -22,6 +22,15 @@ if (Test-Path $layers) {
     Remove-ItemProperty -Path $layers -Name $rct -ErrorAction SilentlyContinue
 }
 
+# Remove the Desktop shortcut created by the installer.
+try {
+    $shell = New-Object -ComObject WScript.Shell
+    $desktop = $shell.SpecialFolders.Item("Desktop")
+    $shortcutPath = Join-Path $desktop "RollerCoaster Tycoon FullHD.lnk"
+    Remove-Item $shortcutPath -Force -ErrorAction SilentlyContinue
+}
+catch {}
+
 [System.Windows.MessageBox]::Show(
     "Original RCT.EXE restored.",
     "RCT1 Deluxe Full HD"
