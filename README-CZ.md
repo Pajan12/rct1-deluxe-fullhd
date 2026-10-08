@@ -19,11 +19,11 @@ Nejde o roztažený obraz 1024×768. Upravené EXE skutečně dovolí hře vykre
 
 **RCT1 Deluxe běžící v rozlišení 1920×1080 na Windows 11**
 
-![RCT1 Deluxe Full HD gameplay](screenshots/RCT-fullhd2.jpg)
+![RCT1 Deluxe Full HD gameplay](patch/screenshots/RCT-fullhd2.jpg)
 
 Další ukázka ve Full HD:
 
-![RCT1 Deluxe Full HD gameplay](screenshots/RCT-fullhd.jpg)
+![RCT1 Deluxe Full HD gameplay](patch/screenshots/RCT-fullhd.jpg)
 
 
 ## Otestovaná konfigurace
@@ -55,7 +55,16 @@ Get-ChildItem -File | Unblock-File
 ## Instalace
 
 1. Nainstaluj **RollerCoaster Tycoon Deluxe**.
-2. Obsah release ZIPu nakopíruj do hlavní složky hry, typicky:
+2. Z balíčku nakopíruj do hlavní složky hry pouze:
+
+   - `Install-RCT-FullHD.cmd`
+   - `Start-RCT-FullHD.cmd`
+   - `Restore-Original-RCT.cmd`
+   - celou složku `patch`
+
+   Oba README soubory mohou zůstat mimo složku hry. Ve složce RCT tak zůstanou navíc jen tři malé spouštěcí/instalační soubory a jedna složka `patch`.
+
+   Typická Steam cesta:
 
    ```text
    C:\Program Files (x86)\Steam\steamapps\common\RollerCoaster Tycoon Deluxe\
@@ -87,17 +96,18 @@ RCT.original.exe
 
 Běžné anglické `RCT.EXE` je zabalené kompresorem **NeoLite**. Instalátor to teď řeší automaticky.
 
-V případě potřeby si dočasně stáhne:
+Pokud je potřeba Steam/GOG EXE rozbalit, instalátor si může dočasně stáhnout tyto **pomocné balíčky**:
 
-- oficiální **Python 3.12.7 embeddable runtime** z python.org
-- **Neo-Executable-Decompressor** od Russa Dilla, připnutý na commit `b88c93369e7faf4c087e3973e1028038ed510526`
-- **pefile**, připnutý na commit `cc9f5501ba93938e505858eaa3230608b6fbc34f`
+- **Python 3.10.11 embeddable runtime** z python.org — přenosný Python pouze pro spuštění unpackeru
+- **Neo-Executable-Decompressor s podporou ExeLock**, připnutý na commit `4c8e0166af65f4a5410cd6a011489e04ffee1bbd` — rozbalí variantu ExeLock/NeoLite použitou u RCT
+- **pefile 2023.2.7** z GitHubu — knihovna pro práci s PE soubory
+- **zipfile-deflate64 0.2.0** z PyPI — Deflate64 dekomprese, kterou ExeLock verze RCT používá
 
-Rozbalí tvoje vlastní `RCT.EXE`, výsledek ověří, provede Full HD patch a dočasné nástroje zase smaže. Python se do Windows **neinstaluje**.
+Vše se stáhne pouze do dočasné složky Windows. Instalátor u Deflate64 balíčku ověří SHA-256 podle údajů z PyPI, rozbalí tvoje vlastní `RCT.EXE`, provede Full HD patch a pomocné soubory zase smaže. Python se do Windows **neinstaluje**.
 
 Při první instalaci je pro automatické rozbalení potřeba připojení k Internetu.
 
-Technické podrobnosti jsou v [UNPACKING.md](UNPACKING.md).
+Technické podrobnosti jsou v [UNPACKING.md](patch/UNPACKING.md).
 
 ## Co patch mění
 
