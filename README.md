@@ -36,28 +36,12 @@ Another Full HD view:
 
 Other configurations may work, but the first release is intentionally focused on the setup above.
 
-## Important: unblock the ZIP first
-
-Windows may add **Mark of the Web** to files downloaded from the Internet. That can block the CMD/PowerShell launcher.
-
-Before extracting the release ZIP:
-
-1. Right-click the downloaded ZIP.
-2. Choose **Properties**.
-3. Check **Unblock**.
-4. Click **Apply / OK**.
-5. Extract the ZIP.
-
-If you already extracted it, open PowerShell in the folder and run:
-
-```powershell
-Get-ChildItem -File | Unblock-File
-```
-
 ## Installation
 
 1. Install **RollerCoaster Tycoon Deluxe** normally.
-2. From the downloaded package, copy these items into the game folder:
+2. **Before extracting the downloaded ZIP**, right-click it → **Properties** → check **Unblock** → **Apply / OK**. This is important because Windows may otherwise block the CMD/PowerShell scripts.
+3. Extract the ZIP.
+4. From the downloaded package, copy these items into the game folder:
 
    - `Install-RCT-FullHD.cmd`
    - `Start-RCT-FullHD.cmd`
@@ -72,16 +56,16 @@ Get-ChildItem -File | Unblock-File
    C:\Program Files (x86)\Steam\steamapps\common\RollerCoaster Tycoon Deluxe\
    ```
 
-3. Double-click:
+5. Double-click:
 
    ```text
    Install-RCT-FullHD.cmd
    ```
 
-4. Approve the Windows UAC prompt.
-5. Wait for the **Installation complete** message.
-6. The installer also creates a Desktop shortcut named **RollerCoaster Tycoon FullHD** using the original game icon.
-7. Start the game either from that Desktop shortcut or with:
+6. Approve the Windows UAC prompt.
+7. Wait for the **Installation complete** message.
+8. The installer also creates a Desktop shortcut named **RollerCoaster Tycoon FullHD** using the original game icon.
+9. Start the game either from that Desktop shortcut or with:
 
    ```text
    Start-RCT-FullHD.cmd
