@@ -80,7 +80,8 @@ Get-ChildItem -File | Unblock-File
 
 4. Approve the Windows UAC prompt.
 5. Wait for the **Installation complete** message.
-6. Start the game with:
+6. The installer also creates a Desktop shortcut named **RollerCoaster Tycoon FullHD** using the original game icon.
+7. Start the game either from that Desktop shortcut or with:
 
    ```text
    Start-RCT-FullHD.cmd
